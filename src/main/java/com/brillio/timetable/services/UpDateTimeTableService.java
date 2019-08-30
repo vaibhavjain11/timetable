@@ -27,6 +27,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,10 +39,14 @@ public class UpDateTimeTableService {
     @Autowired
     InMemoryDao inMemoryDao;
 
+    ReentrantLock lock = new ReentrantLock();
+
     private static final Logger LOG = LoggerFactory.getLogger(UpDateTimeTableService.class.getName());
 
+
     /**
-     *  It is returning the response with time table of student
+     * It is returning the response with time table of student
+     *
      * @param upDateTimeTableRequests
      * @return UpdateTimeTableResponse
      */
@@ -52,7 +58,7 @@ public class UpDateTimeTableService {
                 .map(upDateTimeTableRequest -> new UpdateTableTask(upDateTimeTableRequest.getStudentId(), upDateTimeTableRequest.getCourseCode(),
                         upDateTimeTableRequest.getInstructor(),
                         Utils.convertDayOfWeekToInt(upDateTimeTableRequest.getDayOfWeek()),
-                        upDateTimeTableRequest.getTimeSlot(), inMemoryDao)
+                        upDateTimeTableRequest.getTimeSlot(), inMemoryDao, lock)
                 ).collect(Collectors.toList());
 
         List<Future<TimeTable>> futures = Collections.EMPTY_LIST;
@@ -62,7 +68,7 @@ public class UpDateTimeTableService {
 
         }
 
-        List<TimeTable> timeTables = new ArrayList<>();
+        Set<TimeTable> timeTables = new HashSet<>();
         for (Future future : futures) {
 
             try {
@@ -80,7 +86,7 @@ public class UpDateTimeTableService {
 
     }
 
-    private UpdateTimeTableResponse buildResponse(List<TimeTable> timeTables) {
+    private UpdateTimeTableResponse buildResponse(Set<TimeTable> timeTables) {
 
         UpdateTimeTableResponse updateTimeTableResponse = new UpdateTimeTableResponse();
         List<StudentRecord> studentRecords = timeTables.stream().map(buildStudentRecord).collect(Collectors.toList());
@@ -91,7 +97,6 @@ public class UpDateTimeTableService {
 
 
     /**
-     *
      * @param studentId - Student who wants to submit his/her timetable
      * @return - Success ot failure
      */
@@ -99,6 +104,7 @@ public class UpDateTimeTableService {
         int flag = 0;
         TimeTable timeTable = inMemoryDao.getTimeTableForStudent(studentId);
         if (timeTable == null) {
+            timeTable = new TimeTable();
             timeTable.setError("Timetable doesn't exists for student");
         }
         if (timeTable.getStatus() == Status.SUBMITTED) {
@@ -106,13 +112,13 @@ public class UpDateTimeTableService {
         }
         if (timeTable.getUnits() < 40) {
             timeTable.setError("Total units aren't 40");
-        } else  {
+        } else {
             List<Record> records = timeTable.getRecords();
             // Clashes on same time slot should also be prompted in an individual
             //timetable. e.g. selecting 2 instructors for the same time slot.
             Map<TimeSlotKey, String> mapForSameTimeClash = new HashMap<>();
-            for (Record record: records) {
-               flag = updateInstructorTimeSlot(record, mapForSameTimeClash);
+            for (Record record : records) {
+                flag = updateInstructorTimeSlot(record, mapForSameTimeClash);
             }
             if (flag == 1) {
                 timeTable.setError("Same time slot can't be used again in one time table");
@@ -128,30 +134,35 @@ public class UpDateTimeTableService {
     }
 
     private int updateInstructorTimeSlot(Record record, Map<TimeSlotKey, String> mapForSameTimeClash) {
-        Instructor instructor = inMemoryDao.getInstructor(record.getCourseCode(),record.getInstructorName());
+        Instructor instructor = inMemoryDao.getInstructor(record.getCourseCode(), record.getInstructorName());
         Map<TimeSlotKey, TimeSlotEntry> timeSlotEntryMap = instructor.getSlots();
-        TimeSlotKey key = new TimeSlotKey(record.getDayOfWeek(),record.getSlot());
+        TimeSlotKey key = new TimeSlotKey(record.getDayOfWeek(), record.getSlot());
         if (mapForSameTimeClash.get(key) == null) {
             mapForSameTimeClash.put(key, instructor.getInstructorName());
         } else {
             return 1;
         }
-        TimeSlotEntry entry  = timeSlotEntryMap.get(key);
-        if (entry == null) {
-            entry = new TimeSlotEntry();
-            entry.setNumOfStudents(1);
-            entry.setStatus(1);
-            entry.setSlot(record.getSlot());
-            entry.setDayOfWeek(record.getDayOfWeek());
+        TimeSlotEntry entry = timeSlotEntryMap.get(key);
 
-        } else {
-            if (entry.getNumOfStudents() == instructor.getNumberOfStudents()) {
-                return 2;
+        // In case 2 student request is coming for same instructor, then multiple thread will access the same instructor object.
+        // To avoid inconsistent in entries of slot lock on instructor
+        synchronized (instructor) {
+            if (entry == null) {
+                entry = new TimeSlotEntry();
+                entry.setNumOfStudents(1);
+                entry.setStatus(1);
+                entry.setSlot(record.getSlot());
+                entry.setDayOfWeek(record.getDayOfWeek());
+
+            } else {
+                if (entry.getNumOfStudents() == instructor.getNumberOfStudents()) {
+                    return 2;
+                }
+                // Increasing the count of students who submitted their timetable
+                entry.setNumOfStudents(entry.getNumOfStudents() + 1);
             }
-            // Increasing the count of students who submitted their timetable
-            entry.setNumOfStudents(entry.getNumOfStudents() + 1);
         }
-        timeSlotEntryMap.put(key,entry);
+        timeSlotEntryMap.put(key, entry);
         return 0;
     }
 
@@ -169,7 +180,6 @@ public class UpDateTimeTableService {
     };
 
     /**
-     *
      * @param course - Course needs to be added in persistence layer
      * @return Suucess or failure
      */
@@ -184,7 +194,6 @@ public class UpDateTimeTableService {
     }
 
     /**
-     *
      * @param courseCode
      * @return
      */
@@ -216,7 +225,7 @@ public class UpDateTimeTableService {
 
     public InstructorDetailResponse getInstructorDetail(String courseCode, String insName) {
 
-        Instructor instructor  = inMemoryDao.getInstructor(courseCode,insName);
+        Instructor instructor = inMemoryDao.getInstructor(courseCode, insName);
 
         if (instructor == null) {
             return null;

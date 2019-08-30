@@ -8,28 +8,35 @@ import com.brillio.timetable.entities.timetable.Record;
 import com.brillio.timetable.entities.timetable.TimeTable;
 import com.brillio.timetable.enums.Status;
 import com.brillio.timetable.enums.TimeSlot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class UpdateTableTask implements Callable<TimeTable> {
 
+    private final Logger LOG = LoggerFactory.getLogger(UpdateTableTask.class);
     String code;
     String name;
     int dayOfWeek;
     int studentId;
     TimeSlot timeSlot;
     IDao inMemoryDao;
+    ReentrantLock lock;
 
-    public UpdateTableTask(Integer studentId, String courseCode, String name, int dayOfWeek, TimeSlot timeSlot, IDao inMemoryDao) {
+    public UpdateTableTask(Integer studentId, String courseCode, String name, int dayOfWeek, TimeSlot timeSlot, IDao inMemoryDao, ReentrantLock lock) {
         this.code = courseCode;
         this.name = name;
         this.dayOfWeek = dayOfWeek;
         this.studentId = studentId;
         this.inMemoryDao = inMemoryDao;
         this.timeSlot = timeSlot;
+        this.lock = lock;
     }
+
 
     @Override
     public TimeTable call() throws Exception {
@@ -37,20 +44,20 @@ public class UpdateTableTask implements Callable<TimeTable> {
         TimeTable timeTable = inMemoryDao.getStudentTimeTable().getMap().get(studentId);
         if (timeTable != null) {
             if (timeTable.getStatus() == Status.NOT_SUBMITTED) {
-                updateTask(timeTable);
+                updateTask(studentId);
             } else {
                 populateErrors("Time table is frozen. You can't submit now", timeTable);
             }
         } else {
-            timeTable = new TimeTable();
-            updateTask(timeTable);
+            updateTask(studentId);
         }
 
-        inMemoryDao.getStudentTimeTable().getMap().put(studentId, timeTable);
         return inMemoryDao.getStudentTimeTable().getMap().get(studentId);
     }
 
-    private void updateTask(TimeTable timeTable) {
+    private void updateTask(int studentId) {
+
+        TimeTable timeTable = inMemoryDao.getStudentTimeTable().getMap().get(studentId);
         List<Instructor> instructors = inMemoryDao.getInstructors().get(code);
 
         Optional<Instructor> instructor = instructors.stream()
@@ -66,17 +73,30 @@ public class UpdateTableTask implements Callable<TimeTable> {
 
                 Instructor ins = instructor.get();
 
-                Record record = new Record();
-                record.setDayOfWeek(dayOfWeek);
-                record.setSlot(timeSlot.getValue());
-                record.setCourseCode(code);
-                record.setInstructorName(ins.getInstructorName());
+                // Multiple entries for same student may come in different thread which have same time table
+                // if timetable is null, then we will have to block all thread which have null timetable
+                // but if timetable is not null then we can block only those thread which are trying to update that table
+                if (timeTable == null) {
+                    LOG.info("Time table is null, using lock for student {}", studentId);
+                    lock.lock();
+                    timeTable = inMemoryDao.getStudentTimeTable().getMap().get(studentId);
+                    if (timeTable == null) {
+                        timeTable = new TimeTable();
+                        updateTable(timeTable, ins);
+                    } else {
 
-                timeTable.setStudentId(studentId);
-                timeTable.addRecord(record);
-                timeTable.setUnits(timeTable.getUnits() + inMemoryDao.getCourse().get(code).getCourseUnit());
-                timeTable.setStatus(Status.NOT_SUBMITTED);
-                timeTable.setError(Constants.NO_ERROR);
+                        LOG.info("Time table is not null in lock process for student {}", studentId);
+                        updateTable(timeTable, ins);
+                    }
+                    inMemoryDao.getStudentTimeTable().getMap().put(studentId, timeTable);
+                    lock.unlock();
+                } else {
+                    synchronized (timeTable) {
+                        LOG.info("Time table is not null in synchronized for student id {}", studentId);
+                        updateTable(timeTable, ins);
+                        inMemoryDao.getStudentTimeTable().getMap().put(studentId, timeTable);
+                    }
+                }
 
             } else {
                 populateErrors("Instructor is full packed or you requested on the day when instructor wants to chill out.. Try later", timeTable);
@@ -85,6 +105,19 @@ public class UpdateTableTask implements Callable<TimeTable> {
             populateErrors("Requested Instructor is not registered", timeTable);
         }
 
+    }
+
+    private void updateTable(TimeTable timeTable, Instructor ins) {
+        Record record = new Record();
+        record.setDayOfWeek(dayOfWeek);
+        record.setSlot(timeSlot.getValue());
+        record.setCourseCode(code);
+        record.setInstructorName(ins.getInstructorName());
+        timeTable.setStudentId(studentId);
+        timeTable.addRecord(record);
+        timeTable.setUnits(timeTable.getUnits() + inMemoryDao.getCourse().get(code).getCourseUnit());
+        timeTable.setStatus(Status.NOT_SUBMITTED);
+        timeTable.setError(Constants.NO_ERROR);
     }
 
     private boolean checkIfInstructorHasSlotAvailable(Instructor instructor) {

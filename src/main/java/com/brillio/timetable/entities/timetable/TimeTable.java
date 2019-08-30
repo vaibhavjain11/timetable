@@ -62,4 +62,18 @@ public class TimeTable {
     public void setStatus(Status status) {
         this.status = status;
     }
+
+    @Override
+    public int hashCode() {
+        return studentId;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        TimeTable timeTable = (TimeTable)obj;
+
+        if (this.studentId == timeTable.studentId)
+            return true;
+        return false;
+    }
 }

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Component
 public class InMemoryDao implements IDao {
@@ -28,7 +27,7 @@ public class InMemoryDao implements IDao {
     // intialize students with 800 capacity
     private void initializeTimeTableMap() {
         studentTimeTableMapping = new StudentTimeTableMapping();
-        IntStream.range(1, 801).forEach(i -> studentTimeTableMapping.getMap().put(i, null));
+       // IntStream.range(1, 801).forEach(i -> studentTimeTableMapping.getMap().put(i, new Object()));
     }
 
 
