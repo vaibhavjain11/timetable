@@ -99,12 +99,13 @@ public class UpdateTableTask implements Callable<TimeTable> {
                 }
 
             } else {
-                populateErrors("Instructor is full packed or you requested on the day when instructor wants to chill out.. Try later", timeTable);
+                timeTable = populateErrors("Instructor is full packed or you requested on the day when instructor wants to chill out.. Try later", timeTable);
+                inMemoryDao.getStudentTimeTable().getMap().put(studentId, timeTable);
             }
         } else {
-            populateErrors("Requested Instructor is not registered", timeTable);
+            timeTable = populateErrors("Requested Instructor is not registered", timeTable);
+            inMemoryDao.getStudentTimeTable().getMap().put(studentId, timeTable);
         }
-
     }
 
     private void updateTable(TimeTable timeTable, Instructor ins) {
@@ -128,8 +129,12 @@ public class UpdateTableTask implements Callable<TimeTable> {
         return false;
     }
 
-    private void populateErrors(String message, TimeTable timeTable) {
+    private TimeTable populateErrors(String message, TimeTable timeTable) {
+        if (timeTable == null) {
+            timeTable = new TimeTable();
+        }
         timeTable.setStudentId(studentId);
         timeTable.setError(message);
+        return timeTable;
     }
 }
