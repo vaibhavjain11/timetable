@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @ComponentScan(basePackages = "com.brillio.timetable")
 @EnableAutoConfiguration
-public class TimetableApplication extends SpringBootServletInitializer {
+public class TimetableApplication{
 
 	public static void main(String[] args) {
 		SpringApplication.run(TimetableApplication.class, args);
