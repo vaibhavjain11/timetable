@@ -2,11 +2,25 @@ version: 0.2
 
 phases:
   install:
+    run-as: root
+      commands:
+        - echo This is a installation
+        - wget https://services.gradle.org/distributions/gradle-4.6-all.zip
+        - unzip -d /opt/gradle gradle-4.6-all.zip
     runtime-versions:
       java: corretto8
+  pre_build:
+    commands:
+      - echo This is a pre build
   build:
     commands:
-      - ./gradlew build
+      - echo Starting build `date`
+      - echo Current directory is `pwd`
+      - whereis gradle
+      - which gradle
+      - /opt/gradle/gradle-4.6/bin/gradle -version
+      - /opt/gradle/gradle-4.6/bin/gradle clean
+      - /opt/gradle/gradle-4.6/bin/gradle build
 artifacts:
   files:
     - build/libs/timetable-0.1.0.jar
