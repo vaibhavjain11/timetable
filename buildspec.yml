@@ -2,11 +2,10 @@ version: 0.2
 
 phases:
   install:
-    run-as: root
-      commands:
-        - echo This is a installation
-        - wget https://services.gradle.org/distributions/gradle-4.6-all.zip
-        - unzip -d /opt/gradle gradle-4.6-all.zip
+    commands:
+      - echo This is a installation
+      - wget https://services.gradle.org/distributions/gradle-4.6-all.zip
+      - unzip -d /opt/gradle gradle-4.6-all.zip
     runtime-versions:
       java: corretto8
   pre_build:
