@@ -34,6 +34,11 @@ public class TimeTableController {
     @Autowired
     UpDateTimeTableService upDateTimeTableService;
 
+    @RequestMapping("/")
+    public ResponseEntity<String> getHealth() {
+        return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
     @RequestMapping(path = "/api/available_slots")
     public ResponseEntity<List<AvailableCourses>> getAvailableSlots(
             @RequestParam(value = "day", required = false) DayOfWeek day,
