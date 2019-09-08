@@ -23,3 +23,6 @@ phases:
 artifacts:
   files:
     - build/libs/timetable-0.1.0.jar
+    - appspec.yml
+    - scripts/*
+  discard-paths: yes
