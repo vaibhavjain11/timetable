@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web:2.1.7.RELEASE'
+	
 	compile group: 'org.springframework.boot', name: 'spring-boot-starter-parent', version: '2.1.7.RELEASE'
 	testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.1.7.RELEASE'
 }
