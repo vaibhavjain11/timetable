@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 
 files:
-  - source: /
+  - source: ./timetable-0.1.0.jar
     destination: /var/cdk-app/
 hooks:
   ApplicationStop:
@@ -14,6 +14,5 @@ hooks:
       timeout: 300
       runas: root
   ApplicationStart:
-      - location: scripts/start_server.sh
+      - location: scripts/runas.sh
         timeout: 300
-        runas: root
