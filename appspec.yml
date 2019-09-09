@@ -6,5 +6,5 @@ files:
     destination: /var/cdk-app
 hooks:
   ApplicationStart:
-      - location: scripts/runas.sh
+      - location: runas.sh
         timeout: 300
