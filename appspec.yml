@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 
 files:
-  - source: ./timetable-0.1.0.jar
+  - source: /
     destination: /var/cdk-app/
 hooks:
   ApplicationStop:
