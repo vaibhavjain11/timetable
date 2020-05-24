@@ -1,4 +1,8 @@
 pipeline{
+    environment {
+        registry = "vaibhavjain11/timetable"
+        registryCredential = ‘dockerhub’
+    }
     agent any
     stages {
         stage('Checkout code') {
@@ -11,6 +15,13 @@ pipeline{
         stage('Gradle Build') {
             steps {
                    sh './gradlew clean build'
+            }
+        }
+        stage('Building image') {
+            steps {
+                script {
+                    docker.build registry + ':$BUILD_NUMBER'
+                }
             }
         }
     }
