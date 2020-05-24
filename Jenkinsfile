@@ -20,9 +20,22 @@ pipeline{
         stage('Building image') {
             steps {
                 script {
-                    docker.build registry + ":$BUILD_NUMBER"
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
                 }
             }
+            stage('Publish Image') {
+                script {
+                    docker.withRegistry('', registryCredential) {
+                             dockerImage.push()
+                   }
+                }
+            }
+            stage('Remove unused Image') {
+                steps {
+                     sh "docker rmi $registry:$BUILD_NUMBER"
+                }
+            }
+
         }
     }
 }
