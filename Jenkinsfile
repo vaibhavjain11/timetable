@@ -42,6 +42,7 @@ pipeline{
         stage('Deploy Image on container') {
             steps {
                 script {
+                    sh 'chmod +x change.sh'
                     sh "./change.sh $BUILD_NUMBER"
                     sh "kubectl apply -f ."
                 }
