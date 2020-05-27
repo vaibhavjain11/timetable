@@ -40,9 +40,11 @@ pipeline{
         }
 
         stage('Deploy Image on container') {
-            script {
-                sh 'change.sh ' + $BUILD_NUMBER
-                kubectl apply -f .
+            steps {
+                script {
+                    sh 'change.sh ' + $BUILD_NUMBER
+                    kubectl apply -f .
+                }
             }
         }
     }
