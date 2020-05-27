@@ -44,7 +44,7 @@ pipeline{
                 script {
                     sh 'chmod +x change.sh'
                     sh "./change.sh $BUILD_NUMBER"
-                    sh "kubectl apply -f ."
+                    sh "/usr/local/bin/kubectl apply -f ."
                 }
             }
         }
