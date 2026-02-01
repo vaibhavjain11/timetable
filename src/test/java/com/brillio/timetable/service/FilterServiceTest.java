@@ -6,14 +6,12 @@ import com.brillio.timetable.entities.instructor.Instructor;
 import com.brillio.timetable.enums.DayOfWeek;
 import com.brillio.timetable.responses.AvailableCourses;
 import com.brillio.timetable.services.FilterService;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
 import utils.Utils;
 
 import java.util.Arrays;
@@ -23,7 +21,6 @@ import java.util.Map;
 
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = FilterService.class)
 public class FilterServiceTest {
 
@@ -37,7 +34,7 @@ public class FilterServiceTest {
 
     private static Map<String, Course> courseMap = new HashMap<>();
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         Instructor instructor = new Instructor();
         instructor.setDayOfWeek(Arrays.asList(Utils.convertDayOfWeekToInt(DayOfWeek.MON)));
@@ -70,10 +67,10 @@ public class FilterServiceTest {
 
         List<AvailableCourses> availableCourses = filterService.getFilteredResult(DayOfWeek.MON,"1001");
 
-        Assert.assertNotNull(availableCourses);
-        Assert.assertEquals(availableCourses.size(),1);
-        Assert.assertEquals(1,availableCourses.get(0).getInstructors().size());
-        Assert.assertEquals("Vikas",availableCourses.get(0).getInstructors().get(0).getInstructorName());
+        Assertions.assertNotNull(availableCourses);
+        Assertions.assertEquals(availableCourses.size(),1);
+        Assertions.assertEquals(1,availableCourses.get(0).getInstructors().size());
+        Assertions.assertEquals("Vikas",availableCourses.get(0).getInstructors().get(0).getInstructorName());
     }
 
     @Test
@@ -82,7 +79,7 @@ public class FilterServiceTest {
         when(inMemoryDao.getCourse()).thenReturn(courseMap);
         List<AvailableCourses> availableCourses = filterService.getFilteredResult(DayOfWeek.WED,"1001");
 
-        Assert.assertEquals(0,availableCourses.size());
+        Assertions.assertEquals(0,availableCourses.size());
 
     }
 

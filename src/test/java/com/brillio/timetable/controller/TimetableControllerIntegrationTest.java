@@ -11,20 +11,18 @@ import com.brillio.timetable.enums.Status;
 import com.brillio.timetable.enums.TimeSlot;
 import com.brillio.timetable.inputrequest.AddCourse;
 import com.brillio.timetable.responses.AvailableCourses;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 import utils.Utils;
 
@@ -36,7 +34,6 @@ import java.util.stream.IntStream;
 
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = {TimetableApplication.class, ServletWebServerFactoryAutoConfiguration.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TimetableControllerIntegrationTest {
@@ -57,7 +54,7 @@ public class TimetableControllerIntegrationTest {
 
     private static Map<String, Course> courseMap = new HashMap<>();
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         instructor = new Instructor();
         instructor.setDayOfWeek(Arrays.asList(Utils.convertDayOfWeekToInt(DayOfWeek.MON)));
@@ -102,7 +99,7 @@ public class TimetableControllerIntegrationTest {
                 createURLWithPort("/api/add_course"), HttpMethod.POST, entity, String.class);
 
         String expected = "Course Added";
-        Assert.assertEquals(expected, response.getBody());
+        Assertions.assertEquals(expected, response.getBody());
     }
 
     @Test
@@ -128,7 +125,7 @@ public class TimetableControllerIntegrationTest {
 
         AvailableCourses[] availableCourses = responseEntity.getBody();
 
-        Assert.assertEquals(1, availableCourses.length);
+        Assertions.assertEquals(1, availableCourses.length);
 
     }
 
@@ -160,7 +157,7 @@ public class TimetableControllerIntegrationTest {
         ResponseEntity<TimeTable> response = testRestTemplate.exchange(
                 builder1.toUriString(), HttpMethod.GET, entity1, TimeTable.class);
 
-        Assert.assertNotNull(response.getBody());
+        Assertions.assertNotNull(response.getBody());
     }
 
     private String createURLWithPort(String uri) {

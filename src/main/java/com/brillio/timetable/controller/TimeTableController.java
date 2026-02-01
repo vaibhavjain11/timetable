@@ -19,9 +19,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class TimeTableController {
@@ -134,6 +135,25 @@ public class TimeTableController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+    }
+
+    @RequestMapping(path = "/api/timetables", method = RequestMethod.GET)
+    public ResponseEntity<Map<Integer, TimeTable>> getAllTimeTables() {
+
+        LOG.info("Get all timetables request");
+        try {
+            Map<Integer, TimeTable> timeTables = upDateTimeTableService.getAllTimeTables();
+
+            LOG.info("Retrieved {} timetables", timeTables.size());
+            if (timeTables != null && timeTables.size() > 0) {
+                return new ResponseEntity<>(timeTables, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(Collections.EMPTY_MAP, HttpStatus.NO_CONTENT);
+            }
+        } catch (Exception e) {
+            LOG.error("Exception : {}", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

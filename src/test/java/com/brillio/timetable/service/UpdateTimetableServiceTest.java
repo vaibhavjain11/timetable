@@ -14,15 +14,13 @@ import com.brillio.timetable.inputrequest.UpDateTimeTableRequest;
 import com.brillio.timetable.responses.StudentRecord;
 import com.brillio.timetable.responses.UpdateTimeTableResponse;
 import com.brillio.timetable.services.UpDateTimeTableService;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
 import utils.Utils;
 
 import java.util.*;
@@ -30,7 +28,6 @@ import java.util.stream.IntStream;
 
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = UpDateTimeTableService.class)
 public class UpdateTimetableServiceTest {
 
@@ -52,7 +49,7 @@ public class UpdateTimetableServiceTest {
     private Instructor instructor;
     private Instructor instructor2;
 
-    @Before
+    @BeforeEach
     public void init() {
         instructor = new Instructor();
         instructor.setDayOfWeek(Arrays.asList(Utils.convertDayOfWeekToInt(DayOfWeek.MON)));
@@ -104,19 +101,19 @@ public class UpdateTimetableServiceTest {
 
         UpdateTimeTableResponse updateTimeTableResponse = upDateTimeTableService.updateTimeTable(list);
 
-        Assert.assertNotNull(updateTimeTableResponse);
-        Assert.assertNotNull(updateTimeTableResponse.getStudentRecords());
-        Assert.assertEquals(1,updateTimeTableResponse.getStudentRecords().size());
+        Assertions.assertNotNull(updateTimeTableResponse);
+        Assertions.assertNotNull(updateTimeTableResponse.getStudentRecords());
+        Assertions.assertEquals(1,updateTimeTableResponse.getStudentRecords().size());
 
         List<StudentRecord> studentRecordList = updateTimeTableResponse.getStudentRecords();
 
-        Assert.assertNotNull(studentRecordList.get(0).getRecords());
-        Assert.assertEquals(1,studentRecordList.get(0).getRecords().size());
+        Assertions.assertNotNull(studentRecordList.get(0).getRecords());
+        Assertions.assertEquals(1,studentRecordList.get(0).getRecords().size());
 
         Record record = studentRecordList.get(0).getRecords().get(0);
-        Assert.assertEquals(TimeSlot.TWELEVE.getValue(),record.getSlot());
-        Assert.assertEquals("1001", record.getCourseCode());
-        Assert.assertEquals(Utils.convertDayOfWeekToInt(DayOfWeek.MON),record.getDayOfWeek());
+        Assertions.assertEquals(TimeSlot.TWELEVE.getValue(),record.getSlot());
+        Assertions.assertEquals("1001", record.getCourseCode());
+        Assertions.assertEquals(Utils.convertDayOfWeekToInt(DayOfWeek.MON),record.getDayOfWeek());
     }
 
     @Test
@@ -141,11 +138,11 @@ public class UpdateTimetableServiceTest {
 
         UpdateTimeTableResponse updateTimeTableResponse = upDateTimeTableService.updateTimeTable(list);
 
-        Assert.assertNotNull(updateTimeTableResponse);
-        Assert.assertNotNull(updateTimeTableResponse.getStudentRecords());
-        Assert.assertEquals(1,updateTimeTableResponse.getStudentRecords().size());
+        Assertions.assertNotNull(updateTimeTableResponse);
+        Assertions.assertNotNull(updateTimeTableResponse.getStudentRecords());
+        Assertions.assertEquals(1,updateTimeTableResponse.getStudentRecords().size());
 
-        Assert.assertEquals("Requested Instructor is not registered",updateTimeTableResponse.getStudentRecords().get(0).getError());
+        Assertions.assertEquals("Requested Instructor is not registered",updateTimeTableResponse.getStudentRecords().get(0).getError());
     }
 
     @Test
@@ -169,9 +166,9 @@ public class UpdateTimetableServiceTest {
 
         TimeTable actualTimeTable = upDateTimeTableService.submitTimeTable(1);
 
-        Assert.assertNotNull(actualTimeTable);
-        Assert.assertEquals(courseMap.get("1001").getCourseUnit() , actualTimeTable.getUnits());
-        Assert.assertEquals("Total units aren't 40", actualTimeTable.getError());
+        Assertions.assertNotNull(actualTimeTable);
+        Assertions.assertEquals(courseMap.get("1001").getCourseUnit() , actualTimeTable.getUnits());
+        Assertions.assertEquals("Total units aren't 40", actualTimeTable.getError());
 
     }
 
@@ -206,8 +203,8 @@ public class UpdateTimetableServiceTest {
 
         TimeTable actualTimeTable = upDateTimeTableService.submitTimeTable(1);
 
-        Assert.assertNotNull(actualTimeTable);
-        Assert.assertEquals("Same time slot can't be used again in one time table", actualTimeTable.getError());
+        Assertions.assertNotNull(actualTimeTable);
+        Assertions.assertEquals("Same time slot can't be used again in one time table", actualTimeTable.getError());
 
     }
 

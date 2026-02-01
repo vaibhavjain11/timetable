@@ -242,4 +242,8 @@ public class UpDateTimeTableService {
         }
 
     }
+
+    public Map<Integer, TimeTable> getAllTimeTables() {
+        return inMemoryDao.getStudentTimeTable().getMap();
+    }
 }
